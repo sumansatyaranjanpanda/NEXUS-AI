@@ -29,14 +29,13 @@ services:
     ports: []  # Removed from public — Caddy proxies /v1/* to nexus-api:8000 internally
 
   celery-worker:
-    command: celery -A nexus.workers.tasks worker --loglevel=info -P gevent --concurrency=4
+    command: celery -A nexus.workers.tasks worker --loglevel=info -P solo
 
   qdrant:
     ports: []  # Internal only — not reachable from the internet
 
   redis:
-    ports:
-      - "127.0.0.1:6379:6379"  # Accessible from VPS localhost only, not externally
+    ports: []  # No host port — containers talk to redis via Docker internal network
 
 volumes:
   caddy_data:

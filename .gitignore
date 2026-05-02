@@ -1,0 +1,39 @@
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ── Secrets — never commit these ──────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Build artifacts ────────────────────────────────────────────
+dist/
+build/
+
+# ── Frontend ───────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+
+# ── Claude Code ────────────────────────────────────────────────
+.claude/
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS metadata ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker volume data (if mounted locally) ───────────────────
+qdrant_storage/
+redis_data/

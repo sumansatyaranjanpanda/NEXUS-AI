@@ -1,0 +1,25 @@
+# ── Production Caddyfile ──────────────────────────────────────
+#
+# Phase 1 (IP only, no domain yet):  keep ":80" below
+# Phase 2 (after adding a domain):   replace :80 with yourdomain.com
+#   Caddy will auto-obtain a Let's Encrypt SSL cert — no extra config needed.
+#
+:80 {
+    # Serve the built React app from the container volume
+    root * /srv/frontend
+
+    # Proxy all API traffic to the FastAPI container (internal Docker network)
+    handle /v1/* {
+        reverse_proxy nexus-api:8000
+    }
+
+    handle /health {
+        reverse_proxy nexus-api:8000
+    }
+
+    # SPA fallback — React Router needs this so refreshing /any-page works
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}

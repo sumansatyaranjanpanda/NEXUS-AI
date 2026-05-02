@@ -1,0 +1,43 @@
+# Production overrides — layered on top of docker-compose.yml
+#
+# Run with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# What this file changes vs. dev:
+#   - Adds Caddy as reverse proxy + HTTPS + static frontend server
+#   - Removes nexus-api port 8000 from public internet (only Caddy talks to it)
+#   - Removes Qdrant ports from public internet (internal only)
+#   - Locks Redis to 127.0.0.1 (localhost only, no external access)
+#   - Upgrades Celery from -P solo (dev) to -P gevent (production concurrency)
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv/frontend:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - nexus-api
+    restart: unless-stopped
+
+  nexus-api:
+    ports: []  # Removed from public — Caddy proxies /v1/* to nexus-api:8000 internally
+
+  celery-worker:
+    command: celery -A nexus.workers.tasks worker --loglevel=info -P gevent --concurrency=4
+
+  qdrant:
+    ports: []  # Internal only — not reachable from the internet
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"  # Accessible from VPS localhost only, not externally
+
+volumes:
+  caddy_data:
+  caddy_config:

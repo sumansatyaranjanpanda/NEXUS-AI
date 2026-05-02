@@ -76,9 +76,10 @@ def evaluate_state(state: NexusState) -> dict | None:
 
     try:
         eval_llm = ChatOpenAI(
-            model=settings.openrouter_model,
+            model="openai/gpt-4o-mini",  # cheap + fast — sufficient for RAGAS scoring
             api_key=settings.openrouter_api_key,
             base_url=settings.openrouter_base_url,
+            max_tokens=4096,
         )
         ragas_llm = LangchainLLMWrapper(eval_llm)
     except Exception as exc:

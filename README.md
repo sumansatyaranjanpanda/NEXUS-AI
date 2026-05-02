@@ -21,13 +21,12 @@
 
 <br/>
 
-<!-- Replace with your actual screenshot/GIF -->
-![NEXUS Pipeline Demo](![alt text](image.png))
-![NEXUS Pipeline Demo](![alt text](image-1.png))
-![NEXUS Pipeline Demo](![alt text](image-2.png))
-![NEXUS Pipeline Demo](![alt text](image-3.png))
-![NEXUS Pipeline Demo](![alt text](image-4.png))
-![NEXUS Pipeline Demo](![alt text](image-5.png))
+![Query Form](docs/image.png)
+![Pipeline Running](docs/image-1.png)
+![HITL Review](docs/image-2.png)
+![Fact Check Results](docs/image-3.png)
+![Report View](docs/image-4.png)
+![PDF Export](docs/image-5.png)
 
 
 </div>

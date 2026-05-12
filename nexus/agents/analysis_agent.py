@@ -144,31 +144,41 @@ async def analysis_node(state: NexusState) -> dict:
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    import guardrails as gd
-    from guardrails.validator_base import Validator, register_validator, ValidationResult, PassResult, FailResult
-
-    @register_validator(name="no_disclaimers", data_type="string")
-    class NoDisclaimers(Validator):
-        """Ensure the model doesn't output unhelpful AI disclaimers."""
-        def validate(self, value: str, metadata: dict) -> ValidationResult:
-            disclaimers = ["as an ai", "i cannot", "i don't have access"]
-            for d in disclaimers:
-                if d in value.lower():
-                    return FailResult(error_message=f"Contains AI disclaimer: {d}")
-            return PassResult()
-
     log.info("analysis_agent.complete", sections=len(report.sections))
     await push_progress(run_id, f"Analysis complete — {len(report.sections)} sections generated", stage="analyzing")
 
-    guard = gd.Guard.for_string(validators=[NoDisclaimers(on_fail="noop")])
-    validation = guard.validate(report.executive_summary)
-    if not validation.validation_passed:
-        log.warning("analysis_agent.guardrail_failed", error=str(validation.error))
-        return {
-            "stage": PipelineStage.FAILED,
-            "errors": [f"Guardrail failed: {validation.error}"],
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        }
+    _DISCLAIMERS = ["as an ai", "i cannot", "i don't have access"]
+    try:
+        import guardrails as gd
+        from guardrails.validator_base import Validator, register_validator, ValidationResult, PassResult, FailResult
+
+        @register_validator(name="no_disclaimers", data_type="string")
+        class NoDisclaimers(Validator):
+            def validate(self, value: str, metadata: dict) -> ValidationResult:
+                for d in _DISCLAIMERS:
+                    if d in value.lower():
+                        return FailResult(error_message=f"Contains AI disclaimer: {d}")
+                return PassResult()
+
+        guard = gd.Guard.for_string(validators=[NoDisclaimers(on_fail="noop")])
+        validation = guard.validate(report.executive_summary)
+        if not validation.validation_passed:
+            log.warning("analysis_agent.guardrail_failed", error=str(validation.error))
+            return {
+                "stage": PipelineStage.FAILED,
+                "errors": [f"Guardrail failed: {validation.error}"],
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+    except ImportError:
+        # guardrails-ai not installed — plain fallback check
+        matched = next((d for d in _DISCLAIMERS if d in report.executive_summary.lower()), None)
+        if matched:
+            log.warning("analysis_agent.guardrail_failed", matched=matched)
+            return {
+                "stage": PipelineStage.FAILED,
+                "errors": [f"Guardrail failed: response contains AI disclaimer '{matched}'"],
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
 
     return {
         "stage": PipelineStage.ANALYZING,

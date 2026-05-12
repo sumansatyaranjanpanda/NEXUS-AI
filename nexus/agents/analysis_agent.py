@@ -160,12 +160,10 @@ async def analysis_node(state: NexusState) -> dict:
     log.info("analysis_agent.complete", sections=len(report.sections))
     await push_progress(run_id, f"Analysis complete — {len(report.sections)} sections generated", stage="analyzing")
 
-    # Guardrails AI validation on the executive summary
     guard = gd.Guard.for_string(validators=[NoDisclaimers(on_fail="noop")])
     validation = guard.validate(report.executive_summary)
     if not validation.validation_passed:
         log.warning("analysis_agent.guardrail_failed", error=str(validation.error))
-        # If it fails, we could append an error or fallback, but here we'll just flag it in state
         return {
             "stage": PipelineStage.FAILED,
             "errors": [f"Guardrail failed: {validation.error}"],

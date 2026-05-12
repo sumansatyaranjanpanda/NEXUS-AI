@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy project files
 COPY pyproject.toml .
+# guardrails-ai declares Requires-Python <=3.11 but works fine on 3.11.x —
+# install it first with the version check bypassed, then install everything else.
+RUN pip install --no-cache-dir --ignore-requires-python "guardrails-ai>=0.5.0"
 RUN pip install --no-cache-dir .
 
 COPY . .
